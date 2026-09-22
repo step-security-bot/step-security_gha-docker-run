@@ -32,15 +32,15 @@ jobs:
       - name: Test - basic run with public image
         uses: ./
         with:
-          image: alpine:3.21
+          image: ubuntu:24.04
           run: |
-            echo "Running inside alpine container"
+            echo "Running inside ubuntu container"
             uname -a
 
       - name: Test - file creation and workspace mapping
         uses: ./
         with:
-          image: alpine:3.21
+          image: ubuntu:24.04
           run: |
             touch /github/workspace/test_output.txt
             echo "workspace_mapped=true" >> /github/workspace/test_output.txt
@@ -53,7 +53,7 @@ jobs:
       - name: Test - GITHUB_ env vars are available in container
         uses: ./
         with:
-          image: alpine:3.21
+          image: ubuntu:24.04
           run: |
             test -n "$GITHUB_REPOSITORY" || (echo "GITHUB_REPOSITORY not set" && exit 1)
             test -n "$GITHUB_SHA" || (echo "GITHUB_SHA not set" && exit 1)
@@ -62,7 +62,7 @@ jobs:
       - name: Test - env-context passes workflow env vars to container
         uses: ./
         with:
-          image: alpine:3.21
+          image: ubuntu:24.04
           env-context: ${{ toJSON(env) }}
           run: |
             test "$MY_WORKFLOW_VAR" = "hello-from-workflow" || (echo "env-context not working, MY_WORKFLOW_VAR=$MY_WORKFLOW_VAR" && exit 1)
@@ -71,12 +71,12 @@ jobs:
       - name: Test - run without explicit run command (uses image entrypoint)
         uses: ./
         with:
-          image: alpine:3.21
+          image: ubuntu:24.04
 
       - name: Test - run with specific user
         uses: ./
         with:
-          image: alpine:3.21
+          image: ubuntu:24.04
           user: root
           run: |
             id | grep "uid=0(root)"
