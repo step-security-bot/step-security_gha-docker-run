@@ -21,10 +21,6 @@ steps:
 
 Please see details in [action.yaml](action.yml)
 
-## Contributing
-
-Check out our [contributing guidelines](CONTRIBUTING.md)
-
 ## License
 
 [Apache License 2.0](LICENSE)
