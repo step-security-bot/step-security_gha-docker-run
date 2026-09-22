@@ -1,0 +1,87 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - '**.MD'
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+    paths-ignore:
+      - '**.md'
+      - '**.MD'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Integration Test
+    env:
+      MY_WORKFLOW_VAR: hello-from-workflow
+
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Test - basic run with public image
+        uses: ./
+        with:
+          image: ubuntu:24.04
+          run: |
+            echo "Running inside ubuntu container"
+            uname -a
+
+      - name: Test - file creation and workspace mapping
+        uses: ./
+        with:
+          image: ubuntu:24.04
+          run: |
+            touch /github/workspace/test_output.txt
+            echo "workspace_mapped=true" >> /github/workspace/test_output.txt
+
+      - name: Verify file created by container is accessible on host
+        run: |
+          test -f test_output.txt && grep "workspace_mapped=true" test_output.txt
+          echo "File creation and workspace mapping verified"
+
+      - name: Test - GITHUB_ env vars are available in container
+        uses: ./
+        with:
+          image: ubuntu:24.04
+          run: |
+            test -n "$GITHUB_REPOSITORY" || (echo "GITHUB_REPOSITORY not set" && exit 1)
+            test -n "$GITHUB_SHA" || (echo "GITHUB_SHA not set" && exit 1)
+            echo "GITHUB_ env vars are available"
+
+      - name: Test - env-context passes workflow env vars to container
+        uses: ./
+        with:
+          image: ubuntu:24.04
+          env-context: ${{ toJSON(env) }}
+          run: |
+            test "$MY_WORKFLOW_VAR" = "hello-from-workflow" || (echo "env-context not working, MY_WORKFLOW_VAR=$MY_WORKFLOW_VAR" && exit 1)
+            echo "env-context verified: MY_WORKFLOW_VAR=$MY_WORKFLOW_VAR"
+
+      - name: Test - run without explicit run command (uses image entrypoint)
+        uses: ./
+        with:
+          image: ubuntu:24.04
+
+      - name: Test - run with specific user
+        uses: ./
+        with:
+          image: ubuntu:24.04
+          user: root
+          run: |
+            id | grep "uid=0(root)"
+            echo "User override verified"
+
+      - name: Clean up test artifacts
+        if: always()
+        run: rm -f test_output.txt
