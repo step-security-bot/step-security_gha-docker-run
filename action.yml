@@ -24,4 +24,4 @@ inputs:
     required: false
 runs:
   using: 'node24'
-  main: 'dixt/index.js'
+  main: 'dist/index.js'
